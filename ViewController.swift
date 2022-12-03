@@ -10,6 +10,7 @@ import CoreML
 import Vision
 import Alamofire
 import SwiftyJSON
+import SDWebImage
 
 
 class ViewController: UIViewController,UIImagePickerControllerDelegate,UINavigationControllerDelegate {
@@ -30,7 +31,7 @@ class ViewController: UIViewController,UIImagePickerControllerDelegate,UINavigat
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         if let userPickedImage = info[.editedImage] as? UIImage{
             //set imageView background
-            imageView.image = userPickedImage
+            //imageView.image = userPickedImage
             //convert into CIImage
             guard let convertedciimage = CIImage(image: userPickedImage) else{
                 fatalError("Can't convert UIImage into CIImage")
@@ -64,12 +65,14 @@ class ViewController: UIViewController,UIImagePickerControllerDelegate,UINavigat
         let parameters:[String:String] = [
             "format": "json",
             "action":"query",
-            "prop":"extracts",
+            "prop":"extracts|pageimages",
+            
             "exintro":"",
             "explaintext":"",
             "titles":flowerName,
             "indexpageids":"",
-            "redirects":"1"]
+            "redirects":"1",
+            "pithumbsize": "250"]
         AF.request(wikipediaURL, method: .get,parameters:parameters).responseJSON { response in
             
             debugPrint(response)
@@ -82,6 +85,8 @@ class ViewController: UIViewController,UIImagePickerControllerDelegate,UINavigat
                 let pageid = flowerJSON["query"]["pageids"][0].stringValue
                 let flowerdescription = flowerJSON["query"]["pages"][pageid]["extract"].stringValue
                 self.flowerLabel.text = flowerdescription
+                let flowerImage = flowerJSON["query"]["pages"][pageid]["thumbnail"]["source"].stringValue
+                self.imageView.sd_setImage(with: URL(string: flowerImage))
                   debugPrint(flowerJSON)
             
             case .failure(let error):
